@@ -1,19 +1,68 @@
 import javax.crypto.Cipher;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
 
-public class Test_canv extends Canvas {
+public class Test_canv extends Canvas implements Runnable {
+
+    private int width = 600;
+    private int height = 400;
+
+    private int faceX, faceY;
+    private int faceVX, faceVY;
+
+    private Thread thread;
+
+    int fps = 30;
+
+    private  boolean isRunning;
+
+    private BufferStrategy bs;
+    //private BufferedImage img;
+
+    private int bigTreeX, bigTreeY;
+
     public Test_canv() {
 
         JFrame frame = new JFrame("Title goes here");
-        this.setSize(600,400);
+        this.setSize(width,height);
         frame.add(this);
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
+
+        isRunning = false;
+
+        faceX = 300;
+        faceY = 300;
+        faceVX = 10;
+
+        bigTreeX = 400;
+        bigTreeY = 200;
     }
 
-    public void paint(Graphics g) {
+    public void update() {
+        faceX += faceVX;
+        if (faceX > width) {
+            faceVX = -faceVX;
+        } else if (faceX < 0) {
+            faceVX = -faceVX;
+        }
+    }
+
+    public void draw() {
+        bs = getBufferStrategy();
+        if (bs == null) {
+            createBufferStrategy(3);
+            return;
+        }
+        Graphics g = bs.getDrawGraphics();
+
+        update();
+        g.setColor(Color.white);
+        g.fillRect(0,0,width,height);
         g.setColor(Color.black);
         g.fillRect(200,200,100,50);
         g.setColor(new Color(200,150,100));
@@ -26,11 +75,11 @@ public class Test_canv extends Canvas {
         drawTree(g,150,195);
         drawTree(g,160,200);
 
-        drawBigTree(g,300,300);
+        drawBigTree(g,bigTreeX,bigTreeY);
 
-        drawMan(g,400,300);
-
-
+        drawMan(g,faceX,faceY);
+        g.dispose();
+        bs.show();
     }
 
     private void drawMan(Graphics g, int x, int y) {
@@ -77,5 +126,135 @@ public class Test_canv extends Canvas {
 
     public static void main(String[] args) {
         Test_canv painting = new Test_canv();
+        painting.start();
+    }
+
+    public synchronized void start() {
+        thread = new Thread(this);
+        isRunning = true;
+        thread.start();
+    }
+
+    public synchronized void stop() {
+        isRunning = false;
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void run() {
+        double deltaT = 1000.0/fps;
+        long lastTime = System.currentTimeMillis();
+
+        while (isRunning) {
+            long now = System.currentTimeMillis();
+            if (now-lastTime > deltaT) {
+                update();
+                draw();
+                lastTime = now;
+            }
+        }
+        stop();
+
+    }
+
+    private class KL implements KeyListener {
+        @Override
+        public void keyTyped(KeyEvent keyEvent) {
+            if (keyEvent.getKeyChar() == 'a') {
+                bigTreeX -= 5;
+                System.out.println("LEFT");
+            }
+            if (keyEvent.getKeyChar() == 'd') {
+                bigTreeX += 5;
+            }
+            if (keyEvent.getKeyChar() == 'w') {
+                bigTreeY -= 5;
+                System.out.println("UP");
+            }
+            if (keyEvent.getKeyChar() == 's') {
+                bigTreeY += 5;
+            }
+        }
+
+        @Override
+        public void keyPressed(KeyEvent keyEvent) {
+            if (keyEvent.getKeyChar() == 'a') {
+                bigTreeX -= 5;
+                System.out.println("LEFT");
+            }
+            if (keyEvent.getKeyChar() == 'd') {
+                bigTreeX += 5;
+            }
+            if (keyEvent.getKeyChar() == 'w') {
+                bigTreeY -= 5;
+                System.out.println("UP");
+            }
+            if (keyEvent.getKeyChar() == 's') {
+                bigTreeY += 5;
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent keyEvent) {
+            if (keyEvent.getKeyChar() == 'a') {
+                bigTreeX -= 5;
+                System.out.println("LEFT");
+            }
+            if (keyEvent.getKeyChar() == 'd') {
+                bigTreeX += 5;
+            }
+            if (keyEvent.getKeyChar() == 'w') {
+                bigTreeY -= 5;
+                System.out.println("UP");
+            }
+            if (keyEvent.getKeyChar() == 's') {
+                bigTreeY += 5;
+            }
+        }
+    }
+
+    private class ML implements MouseListener {
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
+        }
+    }
+
+    private class MML implements MouseMotionListener {
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+
+        }
     }
 }
